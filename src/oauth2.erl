@@ -33,6 +33,7 @@
 -export([authorize_client_credentials/4]).
 -export([authorize_code_grant/5]).
 -export([authorize_code_request/6]).
+-export([create_authorization/5]).
 -export([issue_code/2]).
 -export([issue_token/2]).
 -export([issue_token_and_refresh/2]).
@@ -232,6 +233,28 @@ authorize_code_request(CId, RedirUri, UId, Pwd, Scope, AppCtx1) ->
                                                      , ttl      = TTL
                                                      } }}
                             end
+                    end;
+                _ ->
+                    {error, unauthorized_client}
+            end
+    end.
+
+create_authorization(CId, RedirUri, ResOwner, Scope, AppCtx1) ->
+    case ?BACKEND:get_client_identity(CId, AppCtx1) of
+        {error, _}   -> {error, unauthorized_client};
+        {ok, {AppCtx2, Client}} ->
+            case ?BACKEND:verify_redirection_uri(Client, RedirUri, AppCtx2) of
+                {ok, AppCtx3} ->
+                    case ?BACKEND:verify_resowner_scope(
+                            ResOwner, Scope, AppCtx3) of
+                        {error, _}              -> {error, invalid_scope};
+                        {ok, {AppCtx5, Scope2}} ->
+                            TTL = oauth2_config:expiry_time(code_grant),
+                            {ok, {AppCtx5, #a{ client   = Client
+                                             , resowner = ResOwner
+                                             , scope    = Scope2
+                                             , ttl      = TTL
+                                             } }}
                     end;
                 _ ->
                     {error, unauthorized_client}
