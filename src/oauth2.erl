@@ -239,12 +239,13 @@ issue_token(#a{client=Client, resowner=Owner, scope=Scope, ttl=TTL}, Ctx0) ->
 %%        the client is confidential and a refresh token must be issued.
 -spec issue_token_and_refresh(auth(), appctx()) -> {ok, {appctx(), response()}}
                                                  | {error, invalid_authorization}.
-issue_token_and_refresh(#a{client = undefined}, _Ctx)   ->
+issue_token_and_refresh(#a{client = undefined, resowner =  undefined}=A, _Ctx)   ->
+
   {error, invalid_authorization};
-issue_token_and_refresh(#a{resowner = undefined}, _Ctx) ->
-  {error, invalid_authorization};
+
 issue_token_and_refresh( #a{client=Client, resowner=Owner, scope=Scope, ttl=TTL}
                        , Ctx0 ) ->
+   
     RTTL         = oauth2_config:expiry_time(refresh_token),
     RefreshCtx   = build_context(Client,seconds_since_epoch(RTTL),Owner,Scope),
     RefreshToken = ?TOKEN:generate(RefreshCtx),
