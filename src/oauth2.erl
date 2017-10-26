@@ -105,7 +105,6 @@ authorize_password(User, Client, Scope, Ctx0) ->
         {ok, {Ctx1, C}} ->
             case auth_user(User, Scope, Ctx1) of
                 {error, _} = E     ->
-                    error_logger:info_msg("E:~p",[E]),
                     E;
                 {ok, {Ctx2, Auth}} -> {ok, {Ctx2, Auth#a{client=C}}}
             end
@@ -315,12 +314,9 @@ refresh_access_token(Client, RefreshToken, Scope, Ctx0) ->
                     {ok, ExpiryAbsolute} = get(GrantCtx, <<"expiry_time">>),
                     case ExpiryAbsolute > seconds_since_epoch(0) of
                         true ->
-                            error_logger:info_msg("test:~p",[Test]),
-                            error_logger:info_msg("C:~p",[C]),
                             {ok, C}        = get(GrantCtx, <<"client">>),
                             {ok, RegScope} = get(GrantCtx, <<"scope">>),
 
-                            error_logger:info_msg("RegScope:~p Scope:~p",[RegScope, Scope]),
                             case ?BACKEND:verify_scope( RegScope
                                                       , Scope
                                                       , Ctx2) of
@@ -365,7 +361,6 @@ auth_user(User, Scope0, Ctx0) ->
     % User:{<<"user_fb079966-2f6e-414c-beac-7ce758a145e8">>,<<"consumer-device-id2">>} Scope0: <<"default_sc
 %ope">> Ctx0:<<"currentpassword123">>
 
-    error_logger:info_msg("User:~p Scope0: ~p Ctx0:~p",[User, Scope0, Ctx0]),
     case ?BACKEND:authenticate_user(User, Ctx0) of
         {error, _}          -> {error, access_denied};
         {ok, {Ctx1, Owner}} ->
